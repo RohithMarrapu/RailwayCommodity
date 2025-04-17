@@ -10,7 +10,11 @@ interface ExpressTrain {
   status: 'Available' | 'Waiting List';
 }
 
-const SearchTrains = () => {
+interface SearchTrainsProps {
+  onNavigate: (page: string) => void;
+}
+
+const SearchTrains = ({ onNavigate }: SearchTrainsProps) => {
   const expressTrains: ExpressTrain[] = [
     {
       id: '101',
@@ -41,6 +45,10 @@ const SearchTrains = () => {
     }
   ];
 
+  const handleBookNow = (train: ExpressTrain) => {
+    onNavigate('booking');
+  };
+
   return (
     <div className="min-h-[calc(100vh-64px)] bg-white py-8">
       <div className="max-w-7xl mx-auto px-4">
@@ -67,7 +75,10 @@ const SearchTrains = () => {
                     </p>
                   </div>
                 </div>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                <button 
+                  onClick={() => handleBookNow(train)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                >
                   Book Now
                 </button>
               </div>

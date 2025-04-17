@@ -31,7 +31,7 @@ function App() {
       case 'dashboard':
         return <TrainDashboard />;
       case 'search':
-        return <SearchTrains />;
+        return <SearchTrains onNavigate={setCurrentPage} />;
       case 'about':
         return <About />;
       case 'booking':

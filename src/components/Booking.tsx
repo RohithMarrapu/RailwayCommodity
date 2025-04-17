@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface BookingData {
   source: string;
@@ -46,8 +46,13 @@ const Booking = () => {
     }
   ]);
 
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true); // Changed to true by default
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    // This ensures the form is shown when navigating to the booking page
+    setShowForm(true);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
