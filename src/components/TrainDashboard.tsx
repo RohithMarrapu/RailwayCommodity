@@ -9,7 +9,7 @@ interface Train {
   availability: 'Available' | 'Waiting List';
 }
 
-const TrainDashboard = () => {
+const TrainDashboard: React.FC = () => {
   const trains: Train[] = [
     {
       name: 'Superfast',
@@ -78,10 +78,7 @@ const TrainDashboard = () => {
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">Random Train Timetable</h2>
-              <button className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
-                Generate Timetable
-              </button>
+              <h2 className="text-2xl font-semibold">Train Timetable</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">

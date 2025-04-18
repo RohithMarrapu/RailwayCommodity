@@ -10,7 +10,6 @@ interface BookingData {
   contactName: string;
   phone: string;
   email: string;
-  status: 'Pending' | 'In Transit' | 'Delivered';
 }
 
 // Add this function to your Booking component
@@ -28,7 +27,7 @@ const Booking = () => {
     return Math.random().toString(36).substring(2, 12).toUpperCase();
   };
 
-  const [formData, setFormData] = useState<Omit<BookingData, 'pnr' | 'status'>>({
+  const [formData, setFormData] = useState<Omit<BookingData, 'pnr'>>({
     source: '',
     destination: '',
     commodity: '',
@@ -62,8 +61,7 @@ const Booking = () => {
               date: '2025-04-20',
               contactName: 'Amit Sharma',
               phone: '9876543210',
-              email: 'amit@example.com',
-              status: 'Pending' as const
+              email: 'amit@example.com'
             },
             {
               pnr: 'DEF456UVW2',
@@ -74,8 +72,7 @@ const Booking = () => {
               date: '2025-04-21',
               contactName: 'Priya Menon',
               phone: '9876501234',
-              email: 'priya@example.com',
-              status: 'In Transit' as const
+              email: 'priya@example.com'
             }
           ];
           setPendingBookings(defaultBookings);
@@ -98,8 +95,7 @@ const Booking = () => {
           date: '2025-04-20',
           contactName: 'Amit Sharma',
           phone: '9876543210',
-          email: 'amit@example.com',
-          status: 'Pending' as const
+          email: 'amit@example.com'
         },
         {
           pnr: 'DEF456UVW2',
@@ -110,8 +106,7 @@ const Booking = () => {
           date: '2025-04-21',
           contactName: 'Priya Menon',
           phone: '9876501234',
-          email: 'priya@example.com',
-          status: 'In Transit' as const
+          email: 'priya@example.com'
         }
       ];
       setPendingBookings(defaultBookings);
@@ -133,8 +128,7 @@ const Booking = () => {
     setTimeout(() => {
       const newBooking: BookingData = {
         ...formData,
-        pnr: generatePNR(),
-        status: 'Pending'
+        pnr: generatePNR()
       };
       const updatedBookings = [...pendingBookings, newBooking];
       setPendingBookings(updatedBookings);
@@ -159,15 +153,6 @@ const Booking = () => {
     const updated = pendingBookings.filter((_, i) => i !== index);
     setPendingBookings(updated);
     localStorage.setItem('bookings', JSON.stringify(updated));
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Pending': return 'bg-yellow-100 text-yellow-800';
-      case 'In Transit': return 'bg-blue-100 text-blue-800';
-      case 'Delivered': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
   };
 
   return (
@@ -317,9 +302,6 @@ const Booking = () => {
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <p className="font-bold">PNR: {booking.pnr}</p>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                          {booking.status}
-                        </span>
                       </div>
                       <p><strong>From:</strong> {booking.source} → <strong>To:</strong> {booking.destination}</p>
                       <p><strong>Commodity:</strong> {booking.commodity} | <strong>Weight:</strong> {booking.weight} kg</p>
