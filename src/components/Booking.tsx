@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 interface BookingData {
+  pnr: string;
   source: string;
   destination: string;
   commodity: string;
@@ -9,10 +10,25 @@ interface BookingData {
   contactName: string;
   phone: string;
   email: string;
+  status: 'Pending' | 'In Transit' | 'Delivered';
 }
 
+// Add this function to your Booking component
+export const getBookingByPNR = (pnr: string): BookingData | undefined => {
+  const savedBookings = localStorage.getItem('bookings');
+  if (savedBookings) {
+    const bookings: BookingData[] = JSON.parse(savedBookings);
+    return bookings.find(booking => booking.pnr === pnr);
+  }
+  return undefined;
+};
+
 const Booking = () => {
-  const [formData, setFormData] = useState<BookingData>({
+  const generatePNR = () => {
+    return Math.random().toString(36).substring(2, 12).toUpperCase();
+  };
+
+  const [formData, setFormData] = useState<Omit<BookingData, 'pnr' | 'status'>>({
     source: '',
     destination: '',
     commodity: '',
@@ -23,43 +39,107 @@ const Booking = () => {
     email: ''
   });
 
-  const [pendingBookings, setPendingBookings] = useState<BookingData[]>([
-    {
-      source: 'Delhi',
-      destination: 'Mumbai',
-      commodity: 'Electronics',
-      weight: '100',
-      date: '2025-04-20',
-      contactName: 'Amit Sharma',
-      phone: '9876543210',
-      email: 'amit@example.com'
-    },
-    {
-      source: 'Chennai',
-      destination: 'Bangalore',
-      commodity: 'Furniture',
-      weight: '200',
-      date: '2025-04-21',
-      contactName: 'Priya Menon',
-      phone: '9876501234',
-      email: 'priya@example.com'
-    }
-  ]);
-
-  const [showForm, setShowForm] = useState(true); // Changed to true by default
+  // Initialize with empty array and load from localStorage in useEffect
+  const [pendingBookings, setPendingBookings] = useState<BookingData[]>([]);
+  const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Load bookings from localStorage when component mounts
   useEffect(() => {
-    // This ensures the form is shown when navigating to the booking page
-    setShowForm(true);
+    const savedBookings = localStorage.getItem('bookings');
+    if (savedBookings) {
+      try {
+        const parsedBookings = JSON.parse(savedBookings);
+        // Check if we have the default bookings and merge if needed
+        if (parsedBookings.length === 0) {
+          const defaultBookings = [
+            {
+              pnr: 'ABC123XYZ1',
+              source: 'Delhi',
+              destination: 'Mumbai',
+              commodity: 'Electronics',
+              weight: '100',
+              date: '2025-04-20',
+              contactName: 'Amit Sharma',
+              phone: '9876543210',
+              email: 'amit@example.com',
+              status: 'Pending' as const
+            },
+            {
+              pnr: 'DEF456UVW2',
+              source: 'Chennai',
+              destination: 'Bangalore',
+              commodity: 'Furniture',
+              weight: '200',
+              date: '2025-04-21',
+              contactName: 'Priya Menon',
+              phone: '9876501234',
+              email: 'priya@example.com',
+              status: 'In Transit' as const
+            }
+          ];
+          setPendingBookings(defaultBookings);
+          localStorage.setItem('bookings', JSON.stringify(defaultBookings));
+        } else {
+          setPendingBookings(parsedBookings);
+        }
+      } catch (error) {
+        console.error('Failed to parse saved bookings', error);
+      }
+    } else {
+      // Initialize with default bookings if nothing in localStorage
+      const defaultBookings = [
+        {
+          pnr: 'ABC123XYZ1',
+          source: 'Delhi',
+          destination: 'Mumbai',
+          commodity: 'Electronics',
+          weight: '100',
+          date: '2025-04-20',
+          contactName: 'Amit Sharma',
+          phone: '9876543210',
+          email: 'amit@example.com',
+          status: 'Pending' as const
+        },
+        {
+          pnr: 'DEF456UVW2',
+          source: 'Chennai',
+          destination: 'Bangalore',
+          commodity: 'Furniture',
+          weight: '200',
+          date: '2025-04-21',
+          contactName: 'Priya Menon',
+          phone: '9876501234',
+          email: 'priya@example.com',
+          status: 'In Transit' as const
+        }
+      ];
+      setPendingBookings(defaultBookings);
+      localStorage.setItem('bookings', JSON.stringify(defaultBookings));
+    }
   }, []);
+
+  // Save to localStorage whenever pendingBookings changes
+  useEffect(() => {
+    if (pendingBookings.length > 0) {
+      localStorage.setItem('bookings', JSON.stringify(pendingBookings));
+    }
+  }, [pendingBookings]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     setTimeout(() => {
-      setPendingBookings([...pendingBookings, formData]);
+      const newBooking: BookingData = {
+        ...formData,
+        pnr: generatePNR(),
+        status: 'Pending'
+      };
+      const updatedBookings = [...pendingBookings, newBooking];
+      setPendingBookings(updatedBookings);
+      localStorage.setItem('bookings', JSON.stringify(updatedBookings));
+      
       setFormData({
         source: '',
         destination: '',
@@ -78,50 +158,22 @@ const Booking = () => {
   const handleDelete = (index: number) => {
     const updated = pendingBookings.filter((_, i) => i !== index);
     setPendingBookings(updated);
+    localStorage.setItem('bookings', JSON.stringify(updated));
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Pending': return 'bg-yellow-100 text-yellow-800';
+      case 'In Transit': return 'bg-blue-100 text-blue-800';
+      case 'Delivered': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-blue-400 to-blue-600 py-12">
       <div className="max-w-5xl mx-auto px-4">
-        {!showForm ? (
-          <div className="bg-white rounded-lg shadow-xl p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Pending Bookings</h2>
-              <button
-                onClick={() => setShowForm(true)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Add New Booking
-              </button>
-            </div>
-
-            {pendingBookings.length > 0 ? (
-              <ul className="space-y-4">
-                {pendingBookings.map((booking, index) => (
-                  <li
-                    key={index}
-                    className="border border-gray-200 rounded-md p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
-                  >
-                    <div className="flex-1">
-                      <p><strong>From:</strong> {booking.source} → <strong>To:</strong> {booking.destination}</p>
-                      <p><strong>Commodity:</strong> {booking.commodity} | <strong>Weight:</strong> {booking.weight} kg</p>
-                      <p><strong>Date:</strong> {booking.date}</p>
-                      <p><strong>Contact:</strong> {booking.contactName}, {booking.phone}, {booking.email}</p>
-                    </div>
-                    <button
-                      onClick={() => handleDelete(index)}
-                      className="text-red-600 hover:text-red-800 border border-red-200 px-4 py-2 rounded-md transition"
-                    >
-                      Delete
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500">No pending bookings.</p>
-            )}
-          </div>
-        ) : (
+        {showForm ? (
           <div className="bg-white rounded-lg shadow-xl p-8">
             <h2 className="text-2xl font-bold text-center mb-8">Book Your Commodity Transport</h2>
 
@@ -242,6 +294,58 @@ const Booking = () => {
                 </button>
               </div>
             </form>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-xl p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Your Bookings</h2>
+              <button
+                onClick={() => setShowForm(true)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Add New Booking
+              </button>
+            </div>
+
+            {pendingBookings.length > 0 ? (
+              <ul className="space-y-4">
+                {pendingBookings.map((booking, index) => (
+                  <li
+                    key={index}
+                    className="border border-gray-200 rounded-md p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="font-bold">PNR: {booking.pnr}</p>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                          {booking.status}
+                        </span>
+                      </div>
+                      <p><strong>From:</strong> {booking.source} → <strong>To:</strong> {booking.destination}</p>
+                      <p><strong>Commodity:</strong> {booking.commodity} | <strong>Weight:</strong> {booking.weight} kg</p>
+                      <p><strong>Date:</strong> {booking.date}</p>
+                      <p><strong>Contact:</strong> {booking.contactName}, {booking.phone}, {booking.email}</p>
+                    </div>
+                    <button
+                      onClick={() => handleDelete(index)}
+                      className="text-red-600 hover:text-red-800 border border-red-200 px-4 py-2 rounded-md transition"
+                    >
+                      Delete
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">No bookings found.</p>
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Create New Booking
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

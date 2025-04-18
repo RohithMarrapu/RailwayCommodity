@@ -24,21 +24,30 @@ if (!fs.existsSync(csvFilePath)) {
 
 // Signup Endpoint
 app.post('/signup', (req, res) => {
-  const { contactNo, name, email, username, password, rePassword } = req.body;
+  let { contactNo, name, email, username, password, rePassword } = req.body;
+
+  // Trim inputs
+  contactNo = contactNo?.trim() || '';
+  name = name?.trim() || '';
+  email = email?.trim() || '';
+  username = username?.trim() || '';
+  password = password?.trim() || '';
+  rePassword = rePassword?.trim() || '';
 
   if (!username || !password || password !== rePassword) {
-    return res.status(400).json({ message: 'Invalid input or passwords do not match' });
+    return res
+      .status(400)
+      .json({ message: 'Invalid input or passwords do not match' });
   }
 
-  // Check for duplicate username
   let duplicate = false;
   const tempUsers = [];
 
   fs.createReadStream(csvFilePath)
     .pipe(csv())
     .on('data', (row) => {
-      tempUsers.push(row);
-      if (row.username === username) duplicate = true;
+      if (!row.username) return;
+      if (row.username.trim() === username) duplicate = true;
     })
     .on('end', () => {
       if (duplicate) {
@@ -47,7 +56,9 @@ app.post('/signup', (req, res) => {
 
       const data = `${contactNo},${name},${email},${username},${password}\n`;
       fs.appendFile(csvFilePath, data, (err) => {
-        if (err) return res.status(500).json({ message: 'Error writing to file' });
+        if (err) {
+          return res.status(500).json({ message: 'Error writing to file' });
+        }
         res.status(200).json({ message: 'Signup successful' });
       });
     });
@@ -55,16 +66,29 @@ app.post('/signup', (req, res) => {
 
 // Login Endpoint
 app.post('/login', (req, res) => {
-  const { username, password } = req.body;
+  const username = req.body.username?.trim();
+  const password = req.body.password?.trim();
+
   let found = false;
 
   fs.createReadStream(csvFilePath)
     .pipe(csv())
     .on('data', (row) => {
-      if (row.username === username && row.password === password) {
+      if (!row.username || !row.password) {
+        console.log('Skipping malformed row:', row);
+        return;
+      }
+    
+      console.log(`Checking row: ${row.username.trim()} == ${username}, ${row.password.trim()} == ${password}`);
+    
+      if (
+        row.username.trim() === username &&
+        row.password.trim() === password
+      ) {
         found = true;
       }
     })
+    
     .on('end', () => {
       if (found) {
         res.status(200).json({ message: 'Login successful' });

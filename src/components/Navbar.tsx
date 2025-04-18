@@ -4,9 +4,10 @@ import { Train } from 'lucide-react';
 interface NavbarProps {
   onNavigate: (page: string) => void;
   currentPage: string;
+  onLogout: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
+const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage, onLogout }) => {
   const navItems = [
     { label: 'HOME', value: 'home' },
     { label: 'ABOUT', value: 'about' },
@@ -20,7 +21,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
   return (
     <nav className="bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-16 items-center">
           <div className="flex items-center cursor-pointer" onClick={() => onNavigate('home')}>
             <Train className="h-8 w-8 text-blue-600" />
             <span className="ml-2 text-xl font-semibold">Railway Commodity Reservation</span>
@@ -31,14 +32,20 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
                 key={item.value}
                 onClick={() => onNavigate(item.value)}
                 className={`px-3 py-2 rounded-md transition-colors ${
-                  currentPage === item.value 
-                    ? 'text-blue-600 bg-blue-50' 
+                  currentPage === item.value
+                    ? 'text-blue-600 bg-blue-50'
                     : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                 }`}
               >
                 {item.label}
               </button>
             ))}
+            <button
+              onClick={onLogout}
+              className="px-3 py-2 rounded-md text-red-600 hover:bg-red-50 transition-colors"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>

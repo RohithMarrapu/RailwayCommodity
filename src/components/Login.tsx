@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 type Props = {
   onLoginSuccess: () => void;
@@ -18,8 +18,20 @@ const Login: React.FC<Props> = ({ onLoginSuccess }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem('isLoggedIn');
+    if (storedUser === 'true') {
+      onLoginSuccess();
+    }
+  }, [onLoginSuccess]);
+
   const validateEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const validatePassword = (password: string) => {
+    const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+    return regex.test(password);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +44,8 @@ const Login: React.FC<Props> = ({ onLoginSuccess }) => {
         return;
       }
 
-      if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters.');
+      if (!validatePassword(formData.password)) {
+        setError('Password must have at least 6 characters, one uppercase letter, one number, and one special character.');
         return;
       }
 
@@ -47,11 +59,18 @@ const Login: React.FC<Props> = ({ onLoginSuccess }) => {
       ? 'http://localhost:5000/signup'
       : 'http://localhost:5000/login';
 
+    const payload = isSignUp
+      ? formData
+      : {
+          username: formData.username.trim(),
+          password: formData.password.trim(),
+        };
+
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -62,11 +81,10 @@ const Login: React.FC<Props> = ({ onLoginSuccess }) => {
 
       setSuccess(result.message);
 
-      // Call login success handler if it's a login
       if (!isSignUp) {
+        localStorage.setItem('isLoggedIn', 'true');
         onLoginSuccess();
       } else {
-        // Clear form and show success for signup
         setFormData({
           contactNo: '',
           name: '',

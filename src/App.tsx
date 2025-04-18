@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Train, Package, LightbulbIcon, User, Home } from 'lucide-react';
 import Navbar from './components/Navbar';
 import TrackParcel from './components/TrackParcel';
@@ -12,8 +12,22 @@ import Pricing from './components/Pricing';
 import Contact from './components/Contact';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('login'); // default page
+  const [currentPage, setCurrentPage] = useState('login');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const storedLogin = localStorage.getItem('isLoggedIn');
+    if (storedLogin === 'true') {
+      setIsLoggedIn(true);
+      setCurrentPage('home');
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    setIsLoggedIn(false);
+    setCurrentPage('login');
+  };
 
   const renderPage = () => {
     if (!isLoggedIn) {
@@ -53,7 +67,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       {isLoggedIn && (
-        <Navbar onNavigate={setCurrentPage} currentPage={currentPage} />
+        <Navbar onNavigate={setCurrentPage} currentPage={currentPage} onLogout={handleLogout} />
       )}
       {renderPage()}
     </div>
